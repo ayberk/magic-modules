@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	newProvider "google/provider/new/google-beta"
 	oldProvider "google/provider/old/google-beta"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -32,7 +34,12 @@ func changedResourceFields() map[string]ResourceChanges {
 func resourceMapChanges(oldResourceMap, newResourceMap map[string]*schema.Resource) map[string]ResourceChanges {
 	changes := make(map[string]ResourceChanges)
 	for resourceName, newResource := range newResourceMap {
-		if fields := changedFields(oldResourceMap[resourceName], newResource, false); len(fields) > 0 {
+		if !strings.Contains(resourceName, "compute") {
+			continue
+		}
+
+		fmt.Println(resourceName)
+		if fields := changedFields(nil, newResource, false); len(fields) > 0 {
 			changes[resourceName] = fields
 		}
 
@@ -43,6 +50,7 @@ func resourceMapChanges(oldResourceMap, newResourceMap map[string]*schema.Resour
 func changedFields(oldResource, newResource *schema.Resource, nested bool) ResourceChanges {
 	fields := make(ResourceChanges)
 	for fieldName, newFieldSchema := range newResource.Schema {
+		fmt.Printf("\t- %s\n", fieldName)
 		if fieldName == "project" && !nested {
 			// Skip checking the project field of resources since the provider automatically includes it.
 			continue
